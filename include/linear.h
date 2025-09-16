@@ -1,27 +1,32 @@
 #include "allocator.h"
 
+inline size_t alignment (void* a) {
+    return (((size_t) a + 63) & ~(63)) - (size_t)a;
+}
+
 class LinearAlloc: Allocator {
 public:
 
-    uint32_t alloc_size_ = 0;
+    size_t alloc_size_ = 0;
     void* ptr_;
-    uint32_t offset_ = 0;
+    size_t offset_ = 0;
     void* base_;
 
     ~LinearAlloc () {free(base_);}
 
-    void init (uint32_t size) {
+    void init (size_t size) {
         alloc_size_ = size;
         ptr_ = static_cast<void*> (malloc(size));
         base_ = ptr_;
     }
 
     void* allocate (uint32_t size) {
-        if ((offset_ + size) > alloc_size_) return nullptr;
+        size_t adjust = alignment(ptr_);
         void* curr = ptr_;
-        ptr_ = static_cast<char*>(ptr_) + size;
-        offset_ = offset_ + size;
-        return curr;
+        offset_ = offset_ + adjust + size;
+        if (offset_ > alloc_size_) return nullptr;
+        ptr_ = static_cast<char*>(ptr_) + adjust + size;
+        return reinterpret_cast<void*>((size_t)curr + adjust);
     }
 
     void deallocate () {
