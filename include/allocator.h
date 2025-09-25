@@ -1,6 +1,7 @@
 #include <ostream>
 #include <iostream>
 #include <cstring>
+#include <vector>
 
 class Allocator {
 public:
