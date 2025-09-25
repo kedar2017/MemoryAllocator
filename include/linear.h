@@ -1,16 +1,36 @@
 #include "allocator.h"
 
+size_t alignment (size_t addr, size_t align_len) {
+    return ((addr + (align_len - 1)) & ~(align_len-1));
+}
+
 class LinearAlloc: Allocator {
 public:
 
     size_t alloc_size_ = 0;
     void* ptr_;
     void* base_;
+    void* raw_;
+    std::vector<void*> ptr_tracker_;
 
-    ~LinearAlloc () {free(base_);}
+    ~LinearAlloc () {
+        for (auto a: ptr_tracker_) {
+            free(a);
+        }
+    }
 
     void init (size_t size) {
         base_ = static_cast<void*> (malloc(size));
+        ptr_tracker_.push_back(base_);
+        alloc_size_ = size;
+        ptr_ = base_;
+    }
+
+    void init (size_t size, size_t align_len) {
+        size = alignment(size, align_len);
+        raw_ = static_cast<void*> (malloc(size + align_len));
+        ptr_tracker_.push_back(raw_);
+        base_ = (void*)alignment((size_t)raw_, align_len);
         alloc_size_ = size;
         ptr_ = base_;
     }
@@ -25,7 +45,22 @@ public:
         return reinterpret_cast<void*>(curr);
     }
 
-    void deallocate () {
-        free(base_);
+    void* allocate (size_t size, size_t align_len) {
+        size = alignment(size, align_len);
+        size_t curr = (size_t)ptr_;
+        size_t next = curr + size;
+        if (next - (size_t)base_ > alloc_size_) {
+            void* temp = static_cast<void*> (malloc(4 * size + align_len));
+            alloc_size_ = 4 * size;
+            ptr_tracker_.push_back(temp);
+            raw_ = temp;
+            base_ = (void*)alignment((size_t)raw_, align_len);
+            size_t curr_off = (size_t)base_;
+            size_t next_off = curr_off + size;
+            ptr_ = (void*)next_off;
+            return reinterpret_cast<void*>(curr_off);
+        }
+        ptr_ = (void*)(next);
+        return reinterpret_cast<void*>(curr);
     }
 };
