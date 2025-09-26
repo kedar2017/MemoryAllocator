@@ -5,18 +5,10 @@
 using clk = std::chrono::steady_clock;
 
 void wall_time_compare_gemm () {
-    auto t0 = clk::now();
     std::vector<uint8_t> A(550 * 550, 2);
     std::vector<uint8_t> B(550 * 550, 3);
-    std::vector<uint16_t> C_lin_alloc(550 * 550);
     uint8_t* A_ptr = reinterpret_cast<uint8_t*>(A.data());
     uint8_t* B_ptr = reinterpret_cast<uint8_t*>(B.data());
-    uint16_t* C_lin_alloc_ptr = reinterpret_cast<uint16_t*>(C_lin_alloc.data());
-    gemm_linear_alloc(A_ptr, B_ptr, C_lin_alloc_ptr, 550, 4);
-    auto t1 = clk::now();
-
-    double ms_lin_alloc = std::chrono::duration<double, std::milli>(t1 - t0).count();
-    std::cout << "Duration in ms (linear alloc): " << ms_lin_alloc << " \n";
 
     auto t2 = clk::now();
     std::vector<uint16_t> C_malloc(550 * 550);
@@ -40,5 +32,4 @@ void wall_time_compare_gemm () {
 
 int main () {
     wall_time_compare_gemm();
-
 }
