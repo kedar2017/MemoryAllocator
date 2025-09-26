@@ -13,17 +13,16 @@ public:
     void* raw_;
     std::vector<void*> ptr_tracker_;
 
+    // Metrics 
+    size_t total_bytes_allocated_ = 0;
+    size_t capacity_bump_count_ = 0;
+    size_t alloc_counter_ = 0;
+    size_t peak_bytes_ = 0;
+
     ~LinearAlloc () {
         for (auto a: ptr_tracker_) {
             free(a);
         }
-    }
-
-    void init (size_t size) {
-        base_ = static_cast<void*> (malloc(size));
-        ptr_tracker_.push_back(base_);
-        alloc_size_ = size;
-        ptr_ = base_;
     }
 
     void init (size_t size, size_t align_len) {
@@ -35,21 +34,12 @@ public:
         ptr_ = base_;
     }
 
-    void* allocate (size_t size) {
-        size_t curr = (size_t)ptr_;
-        size_t next = curr + size;
-        if (next - (size_t)base_ > alloc_size_) {
-            return nullptr;
-        }
-        ptr_ = (void*)(next);
-        return reinterpret_cast<void*>(curr);
-    }
-
     void* allocate (size_t size, size_t align_len) {
         size = alignment(size, align_len);
         size_t curr = (size_t)ptr_;
         size_t next = curr + size;
         if (next - (size_t)base_ > alloc_size_) {
+            capacity_bump_count_++;
             void* temp = static_cast<void*> (malloc(4 * size + align_len));
             alloc_size_ = 4 * size;
             ptr_tracker_.push_back(temp);
@@ -58,9 +48,15 @@ public:
             size_t curr_off = (size_t)base_;
             size_t next_off = curr_off + size;
             ptr_ = (void*)next_off;
+            total_bytes_allocated_ += size;
             return reinterpret_cast<void*>(curr_off);
         }
+        alloc_counter_++;
+        total_bytes_allocated_ += size;
         ptr_ = (void*)(next);
+        if ((size_t)ptr_ - (size_t)base_ > peak_bytes_) {
+            peak_bytes_ = (size_t)ptr_ - (size_t)base_;
+        }
         return reinterpret_cast<void*>(curr);
     }
 };
