@@ -17,16 +17,11 @@ void prepB (uint8_t* B, uint8_t* scratchB, size_t M, size_t tile_size, size_t of
     }
 }
 
-void gemm_linear_alloc_aligned (uint8_t* A, uint8_t* B, uint16_t* C, size_t M, size_t tile_size, size_t align_len) {
-    LinearAlloc allocA;
-    allocA.init(M * M, align_len);
-    LinearAlloc allocB;
-    allocB.init(M * M, align_len);
-
+void gemm_linear_alloc_aligned (uint8_t* A, uint8_t* B, uint16_t* C, size_t M, size_t tile_size, size_t align_len, LinearAlloc* allocA, LinearAlloc* allocB) {
     for (int t = 0; t < M; t = t + tile_size) {
         size_t kB = std::min(tile_size, M - t);
-        uint8_t* scratchA = (uint8_t*) allocA.allocate(M * kB, align_len);
-        uint8_t* scratchB = (uint8_t*) allocB.allocate(M * kB, align_len);
+        uint8_t* scratchA = (uint8_t*) allocA->allocate(M * kB, align_len);
+        uint8_t* scratchB = (uint8_t*) allocB->allocate(M * kB, align_len);
 
         prepA(A, scratchA, M, kB, t);
         prepB(B, scratchB, M, kB, t);
@@ -58,5 +53,7 @@ void gemm_malloc (uint8_t* A, uint8_t* B, uint16_t* C, size_t M, size_t tile_siz
                 }
             }
         }
+        free(scratchA);
+        free(scratchB);
     }
 }

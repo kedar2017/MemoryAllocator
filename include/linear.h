@@ -12,6 +12,7 @@ public:
     void* base_;
     void* raw_;
     std::vector<void*> ptr_tracker_;
+    size_t init_alloc_size_ = 0;
 
     // Metrics 
     size_t total_bytes_allocated_ = 0;
@@ -20,9 +21,7 @@ public:
     size_t peak_bytes_ = 0;
 
     ~LinearAlloc () {
-        for (auto a: ptr_tracker_) {
-            free(a);
-        }
+        free(ptr_tracker_[0]);
     }
 
     void init (size_t size, size_t align_len) {
@@ -32,6 +31,7 @@ public:
         base_ = (void*)alignment((size_t)raw_, align_len);
         alloc_size_ = size;
         ptr_ = base_;
+        init_alloc_size_ = alloc_size_;
     }
 
     void* allocate (size_t size, size_t align_len) {
@@ -58,5 +58,19 @@ public:
             peak_bytes_ = (size_t)ptr_ - (size_t)base_;
         }
         return reinterpret_cast<void*>(curr);
+    }
+
+    // Resets and keep just the first/original chunk
+    void reset () {
+        raw_ = ptr_tracker_[0];
+        base_ = (void*)alignment((size_t)raw_, 64);
+        ptr_ = base_;
+        alloc_size_ = init_alloc_size_;
+        for (int i = ptr_tracker_.size() - 1; i > 0; i--) {
+            free(ptr_tracker_[i]);
+            if (!ptr_tracker_.empty()) {
+                ptr_tracker_.pop_back();
+            }
+        }
     }
 };
