@@ -1,3 +1,4 @@
+#pragma once
 #include "allocator.h"
 
 size_t alignment (size_t addr, size_t align_len) {
@@ -24,7 +25,7 @@ public:
         free(ptr_tracker_[0]);
     }
 
-    void init (size_t size, size_t align_len) {
+    void init (size_t size, size_t align_len = 64) {
         size = alignment(size, align_len);
         raw_ = static_cast<void*> (malloc(size + align_len));
         ptr_tracker_.push_back(raw_);
@@ -34,7 +35,7 @@ public:
         init_alloc_size_ = alloc_size_;
     }
 
-    void* allocate (size_t size, size_t align_len) {
+    void* allocate (size_t size, size_t align_len = 64) {
         size = alignment(size, align_len);
         size_t curr = (size_t)ptr_;
         size_t next = curr + size;
@@ -61,9 +62,9 @@ public:
     }
 
     // Resets and keep just the first/original chunk
-    void reset () {
+    void reset (size_t align_len = 64) {
         raw_ = ptr_tracker_[0];
-        base_ = (void*)alignment((size_t)raw_, 64);
+        base_ = (void*)alignment((size_t)raw_, align_len);
         ptr_ = base_;
         alloc_size_ = init_alloc_size_;
         for (int i = ptr_tracker_.size() - 1; i > 0; i--) {

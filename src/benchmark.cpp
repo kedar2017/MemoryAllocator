@@ -1,7 +1,9 @@
 #include "../include/workload/gemm.h"
+#include "../include/workload/thread_alloc.h"
 #include <cstdio>
 #include <chrono>
 #include <array>
+#include <thread>
 
 using clk = std::chrono::steady_clock;
 
@@ -40,6 +42,34 @@ void wall_time_compare_large_num_mult (size_t M_len, size_t tile_size, size_t al
     lin_alloc_ms.push_back(ms_lin_alloc_aligned);
 }
 
+void wall_time_compare_multi_thread_alloc (size_t allocations, size_t threads, size_t num_bytes, std::vector<double> thread_alloc_malloc_duration_ms, 
+                                           std::vector<double> thread_alloc_linear_alloc_duration_ms) {
+    auto t0 = clk::now();
+    std::vector<std::thread> workers_malloc;
+    for (int i = 0; i < threads; i++) {
+        workers_malloc.emplace_back(thread_malloc, allocations, num_bytes);
+    }
+    for (auto& x: workers_malloc) x.join();
+    auto t1 = clk::now();
+
+    double ms_malloc = std::chrono::duration<double, std::milli>(t1 - t0).count();
+    std::cout << "Multi-thread --- Duration in ms (malloc): " << ms_malloc << " \n";
+    thread_alloc_malloc_duration_ms.push_back(ms_malloc);
+
+    auto t2 = clk::now();
+    std::vector<std::thread> workers_lin_alloc;
+    for (int i = 0; i < threads; i++) {
+        workers_lin_alloc.emplace_back(thread_arena, allocations, num_bytes);
+    }
+    for (auto& x: workers_lin_alloc) x.join();
+    auto t3 = clk::now();
+
+    double lin_alloc_ms = std::chrono::duration<double, std::milli>(t3 - t2).count();
+    std::cout << "Multi-thread --- Duration in ms (linear alloc aligned): " << lin_alloc_ms << " \n";
+    thread_alloc_linear_alloc_duration_ms.push_back(lin_alloc_ms);
+
+}
+
 int main () {
     /*
     Fixed matrix size of 32x32 
@@ -63,4 +93,17 @@ int main () {
         wall_time_compare_large_num_mult(32, tile_size_sweep[i], 64, gemm_malloc_duration_ms, gemm_linear_alloc_duration_ms, &allocA, &allocB, 
                                          C_malloc_ptr, C_lin_alloc_aligned_ptr);
     }
+    /*
+    Number of allocs ~ 10000
+    Number of threads ~ 20
+    comparison between arena allocations for num allocs for num of threads 
+    */
+
+    size_t allocations = 100000;
+    size_t threads = 50;
+    size_t num_bytes = 64;
+    std::vector<double> thread_alloc_malloc_duration_ms;
+    std::vector<double> thread_alloc_linear_alloc_duration_ms;
+
+    wall_time_compare_multi_thread_alloc(allocations, threads, num_bytes, thread_alloc_malloc_duration_ms, thread_alloc_linear_alloc_duration_ms);
 }

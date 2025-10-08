@@ -1,3 +1,4 @@
+#pragma once
 #include "../linear.h"
 #include <vector>
 
