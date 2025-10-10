@@ -1,5 +1,6 @@
 #include "../include/workload/gemm.h"
 #include "../include/workload/thread_alloc.h"
+#include "../include/workload/graph_build.h"
 #include <cstdio>
 #include <chrono>
 #include <array>
@@ -106,4 +107,6 @@ int main () {
     std::vector<double> thread_alloc_linear_alloc_duration_ms;
 
     wall_time_compare_multi_thread_alloc(allocations, threads, num_bytes, thread_alloc_malloc_duration_ms, thread_alloc_linear_alloc_duration_ms);
+
+    //build_graph_lin_alloc(5, 50);
 }
