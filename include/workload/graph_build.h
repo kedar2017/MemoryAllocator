@@ -4,7 +4,7 @@
 struct Node {
     uint8_t type;
     uint8_t value;
-    Node** children;
+    Node*  children[];
 };
 
 void* allocate_node (int num_children, LinearAlloc* arena) {
