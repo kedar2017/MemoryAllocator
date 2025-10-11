@@ -1,7 +1,7 @@
 #pragma once
 #include "allocator.h"
 
-size_t alignment (size_t addr, size_t align_len) {
+size_t inline alignment (size_t addr, size_t align_len) {
     return ((addr + (align_len - 1)) & ~(align_len-1));
 }
 
