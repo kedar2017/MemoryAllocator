@@ -1,9 +1,11 @@
 #include "../include/workload/gemm.h"
 #include "../include/workload/thread_alloc.h"
+#include "../include/workload/graph_build.h"
 #include <cstdio>
 #include <chrono>
 #include <array>
 #include <thread>
+#include <cmath>
 
 using clk = std::chrono::steady_clock;
 
@@ -88,11 +90,12 @@ int main () {
     uint16_t* C_malloc_ptr = reinterpret_cast<uint16_t*>(C_malloc.data());
     std::vector<uint16_t> C_lin_alloc_aligned(32 * 32);
     uint16_t* C_lin_alloc_aligned_ptr = reinterpret_cast<uint16_t*>(C_lin_alloc_aligned.data());
-
+    /*
     for (int i = 0; i < tile_size_sweep.size(); i++) {
         wall_time_compare_large_num_mult(32, tile_size_sweep[i], 64, gemm_malloc_duration_ms, gemm_linear_alloc_duration_ms, &allocA, &allocB, 
                                          C_malloc_ptr, C_lin_alloc_aligned_ptr);
     }
+    */
     /*
     Number of allocs ~ 10000
     Number of threads ~ 20
@@ -105,5 +108,12 @@ int main () {
     std::vector<double> thread_alloc_malloc_duration_ms;
     std::vector<double> thread_alloc_linear_alloc_duration_ms;
 
-    wall_time_compare_multi_thread_alloc(allocations, threads, num_bytes, thread_alloc_malloc_duration_ms, thread_alloc_linear_alloc_duration_ms);
+    //wall_time_compare_multi_thread_alloc(allocations, threads, num_bytes, thread_alloc_malloc_duration_ms, thread_alloc_linear_alloc_duration_ms);
+
+    LinearAlloc graph_arena;
+    graph_arena.init(std::pow(5, 5) * 70);
+    build_graph_lin_alloc(5, 5, &graph_arena);
+    std::cout << "total_bytes_allocated_ " << graph_arena.total_bytes_allocated_ << "\n";
+    std::cout << "alloc_counter_ " << graph_arena.alloc_counter_ << "\n";
+    std::cout << "peak_bytes_ " << graph_arena.peak_bytes_ << "\n";
 }
