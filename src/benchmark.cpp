@@ -1,9 +1,11 @@
 #include "../include/workload/gemm.h"
 #include "../include/workload/thread_alloc.h"
+#include "../include/workload/graph_build.h"
 #include <cstdio>
 #include <chrono>
 #include <array>
 #include <thread>
+#include <cmath>
 
 using clk = std::chrono::steady_clock;
 
@@ -70,6 +72,29 @@ void wall_time_compare_multi_thread_alloc (size_t allocations, size_t threads, s
 
 }
 
+void wall_time_compare_graph_build (int num_children, int num_layers, int align_len) {
+    LinearAlloc graph_arena;
+    
+    auto t0 = clk::now();
+    graph_arena.init(((std::pow(num_children, num_layers) - 1) / (num_children - 1)) * alignment_helper(2 + 8 * (num_children), align_len), align_len);
+    build_graph_lin_alloc(num_children, num_layers, align_len, &graph_arena);
+    auto t1 = clk::now();
+
+    std::cout << "total_bytes_allocated_ " << graph_arena.total_bytes_allocated_ << "\n";
+    std::cout << "alloc_counter_ " << graph_arena.alloc_counter_ << "\n";
+    std::cout << "peak_bytes_ " << graph_arena.peak_bytes_ << "\n";
+    std::cout << "capacity_bump_count_ " << graph_arena.capacity_bump_count_ << "\n";
+    double lin_alloc_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+    std::cout << "Graph building --- Duration in ms (linear alloc): " << lin_alloc_ms << " \n";
+
+    auto t2 = clk::now();    
+    build_graph_malloc(num_children, num_layers);
+    auto t3 = clk::now();
+
+    double malloc_ms = std::chrono::duration<double, std::milli>(t3 - t2).count();
+    std::cout << "Graph building --- Duration in ms (malloc): " << malloc_ms << " \n";
+}
+
 int main () {
     /*
     Fixed matrix size of 32x32 
@@ -93,11 +118,6 @@ int main () {
         wall_time_compare_large_num_mult(32, tile_size_sweep[i], 64, gemm_malloc_duration_ms, gemm_linear_alloc_duration_ms, &allocA, &allocB, 
                                          C_malloc_ptr, C_lin_alloc_aligned_ptr);
     }
-    /*
-    Number of allocs ~ 10000
-    Number of threads ~ 20
-    comparison between arena allocations for num allocs for num of threads 
-    */
 
     size_t allocations = 100000;
     size_t threads = 50;
@@ -106,4 +126,6 @@ int main () {
     std::vector<double> thread_alloc_linear_alloc_duration_ms;
 
     wall_time_compare_multi_thread_alloc(allocations, threads, num_bytes, thread_alloc_malloc_duration_ms, thread_alloc_linear_alloc_duration_ms);
+
+    wall_time_compare_graph_build(8, 9, 32);
 }
