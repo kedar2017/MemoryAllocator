@@ -41,8 +41,7 @@ public:
         size_t next = curr + size;
         if (next - (size_t)base_ > alloc_size_) {
             capacity_bump_count_++;
-            void* temp = static_cast<void*> (malloc(4 * size + align_len));
-            alloc_size_ = 4 * size;
+            void* temp = static_cast<void*> (malloc(init_alloc_size_ + align_len));
             ptr_tracker_.push_back(temp);
             raw_ = temp;
             base_ = (void*)alignment((size_t)raw_, align_len);
