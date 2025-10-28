@@ -49,6 +49,7 @@ public:
             size_t next_off = curr_off + size;
             ptr_ = (void*)next_off;
             total_bytes_allocated_ += size;
+            alloc_counter_++;
             return reinterpret_cast<void*>(curr_off);
         }
         alloc_counter_++;
