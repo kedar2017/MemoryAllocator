@@ -41,6 +41,21 @@ void wall_time_compare_large_num_mult (size_t M_len, size_t tile_size, size_t al
     auto t5 = clk::now();
     double ms_lin_alloc_aligned = std::chrono::duration<double, std::milli>(t5 - t4).count();
     std::cout << "Duration in ms (linear alloc aligned): " << ms_lin_alloc_aligned << " for tile size " << tile_size  << " \n";
+
+    std::cout << "XXXXXXXXXXXXXXXXXXXX \n";
+    std::cout << "For Matrix A \n";
+    std::cout << "total_bytes_allocated_ " << allocA->total_bytes_allocated_ << "\n";
+    std::cout << "alloc_counter_ " << allocA->alloc_counter_ << "\n";
+    std::cout << "peak_bytes_ " << allocA->peak_bytes_ << "\n";
+    std::cout << "capacity_bump_count_ " << allocA->capacity_bump_count_ << "\n";
+
+    std::cout << "XXXXXXXXXXXXXXXXXXXX \n";
+    std::cout << "For Matrix B \n";
+    std::cout << "total_bytes_allocated_ " << allocB->total_bytes_allocated_ << "\n";
+    std::cout << "alloc_counter_ " << allocB->alloc_counter_ << "\n";
+    std::cout << "peak_bytes_ " << allocB->peak_bytes_ << "\n";
+    std::cout << "capacity_bump_count_ " << allocB->capacity_bump_count_ << "\n";
+
     lin_alloc_ms.push_back(ms_lin_alloc_aligned);
 }
 
