@@ -1,6 +1,7 @@
 #include "../include/workload/gemm.h"
 #include "../include/workload/thread_alloc.h"
 #include "../include/workload/graph_build.h"
+#include "../include/tests/fuzz_linear.h"
 #include <cstdio>
 #include <chrono>
 #include <array>
@@ -111,6 +112,7 @@ void wall_time_compare_graph_build (int num_children, int num_layers, int align_
 }
 
 int main () {
+    fuzz_linear_once (400);
     /*
     Fixed matrix size of 32x32 
     sweep across tile sizes in *tile_size_sweep*
