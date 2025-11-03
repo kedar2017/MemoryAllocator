@@ -112,7 +112,8 @@ void wall_time_compare_graph_build (int num_children, int num_layers, int align_
 }
 
 int main () {
-    fuzz_linear_once (400);
+    test_alloc_rng_sizes (50000);
+    test_alloc_max_capacity_bumps (50000);
     /*
     Fixed matrix size of 32x32 
     sweep across tile sizes in *tile_size_sweep*
