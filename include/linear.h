@@ -20,6 +20,7 @@ public:
     size_t capacity_bump_count_ = 0;
     size_t alloc_counter_ = 0;
     size_t peak_bytes_ = 0;
+    size_t total_bytes_padded_ = 0;
 
     ~LinearAlloc () {
         free(ptr_tracker_[0]);
@@ -36,7 +37,9 @@ public:
     }
 
     void* allocate (size_t size, size_t align_len = 64) {
-        size = alignment(size, align_len);
+        size_t size_aligned = alignment(size, align_len);
+        total_bytes_padded_ += (size_aligned - size);
+        size = size_aligned;
         size_t curr = (size_t)ptr_;
         size_t next = curr + size;
         if (next - (size_t)base_ > alloc_size_) {
@@ -45,6 +48,7 @@ public:
             ptr_tracker_.push_back(temp);
             raw_ = temp;
             base_ = (void*)alignment((size_t)raw_, align_len);
+            total_bytes_padded_ += ((size_t)base_ - (size_t)raw_);
             size_t curr_off = (size_t)base_;
             size_t next_off = curr_off + size;
             ptr_ = (void*)next_off;
