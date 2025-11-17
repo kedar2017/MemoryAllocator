@@ -9,8 +9,6 @@ This repository is a **tiny, focused memory allocator playground**:
 - A **benchmark harness** comparing `LinearAlloc` vs plain `malloc` in a few realistic workloads  
   (GEMM, graph building, multi-threaded allocation storm)
 
-It’s designed to be easy to read in an interview and easy to drop into your own micro-benchmarks or toy engines.
-
 ---
 
 ## Table of contents
@@ -106,7 +104,6 @@ These are all small, self-contained examples focused on *allocator behavior*, no
   When the arena doesn’t have enough space:
   - Allocate a new backing block
   - Use a simple growth policy (e.g., 2–4× the requested size)
-  - Keep the implementation easy to reason about for interview discussions
  
 - **No per-object frees**
   Individual free operations are not supported.
